@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'dva';
 import styles from './index.less';
 import {
   Form,
@@ -19,104 +20,150 @@ import {
 import { UploadOutlined, InboxOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
+let apk_url = '';
 
-class Index extends React.Component {
-  handleClick = () => {
-    window.open('https://localhost:3001/download/app-release-1.0.0.apk');
-  };
-  render() {
-    const props = {
-      name: 'file',
-      action: 'http://localhost:3001/upload',
-      headers: {
-        authorization: 'authorization-text',
+const Index = ({ dispatch, home }) => {
+  // const onFinish = (values: any) => {
+  //   console.log('Received values of form: ', values);
+  //   dispatch({
+  //     type: 'home/uploadAPK',
+  //     payload: {
+  //       ...values,
+  //       apk_url,
+  //     },
+  //   });
+  // };
+  function onFinish(values: any) {
+    console.log('Received values of form: ', values);
+    dispatch({
+      type: 'home/uploadAPK',
+      payload: {
+        ...values,
+        apk_url,
       },
-      onChange(info: { file: { status: string; name: any }; fileList: any }) {
-        if (info.file.status !== 'uploading') {
-          console.log(info.file, info.fileList);
-        }
-        if (info.file.status === 'done') {
-          message.success(`${info.file.name} file uploaded successfully`);
-        } else if (info.file.status === 'error') {
-          message.error(`${info.file.name} file upload failed.`);
-        }
-      },
-    };
-    const formItemLayout = {
-      labelCol: {
-        span: 6,
-      },
-      wrapperCol: {
-        span: 14,
-      },
-    };
-
-    const normFile = (e: { fileList: any }) => {
-      console.log('Upload event:', e);
-
-      if (Array.isArray(e)) {
-        return e;
+    });
+  }
+  // function onFinish(values: any) {
+  //   console.log('Received values of form: ', values);
+  //   dispatch({
+  //     type: 'home/uploadAPK',
+  //     payload: {
+  //       ...values,
+  //       apk_url,
+  //     },
+  //   });
+  // }
+  const props = {
+    name: 'file',
+    action: 'http://localhost:3001/upload',
+    headers: {
+      authorization: 'authorization-text',
+    },
+    onChange(info: { file: { status: string; name: any }; fileList: any }) {
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList);
       }
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully`);
+        apk_url = info.file.response.url;
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+  };
+  const formItemLayout = {
+    labelCol: {
+      span: 6,
+    },
+    wrapperCol: {
+      span: 14,
+    },
+  };
 
-      return e && e.fileList;
-    };
+  const normFile = (e: { fileList: any }) => {
+    console.log('Upload event:', e);
 
-    const onFinish = (values: any) => {
-      console.log('Received values of form: ', values);
-    };
-    return (
-      <div>
-        <h1 className={styles.title}>文件上传</h1>
-        <Form name="validate_other" {...formItemLayout} onFinish={onFinish}>
+    if (Array.isArray(e)) {
+      return e;
+    }
+
+    return e && e.fileList;
+  };
+
+
+
+  return (
+    <div>
+      <h1 className={styles.title}>文件上传</h1>
+      <Form name="validate_other" {...formItemLayout} onFinish={onFinish}>
+        <Form.Item
+          label="版本号"
+          name="version"
+          rules={[{ required: true, message: '请输入版本号!' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="更新内容"
+          name="update_message"
+          rules={[{ required: true, message: '请输入更新的内容!' }]}
+        >
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item
+          label="安装包"
+          // name="apk_url"
+          // rules={[{ required: true, message: '请上传安装包!' }]}
+        >
           <Form.Item
-            label="Username"
-            name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
+            name="apk_url"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            noStyle
           >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Username"
-            name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item label="Dragger">
-            <Form.Item
-              name="dragger"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              noStyle
-            >
+            <Upload.Dragger {...props}>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">点击或拖拽文件到此区域进行上传</p>
+              <p className="ant-upload-hint">
+                Support for a single or bulk upload.
+              </p>
+            </Upload.Dragger>
+            {/* {getFieldDecorator('image_id', {
+              valuePropName: 'imageList',
+              getValueFromEvent: this.normFile,
+              rules: [{ required: true, message: '请上传图片!' }],
+            })(
               <Upload.Dragger {...props}>
                 <p className="ant-upload-drag-icon">
                   <InboxOutlined />
                 </p>
                 <p className="ant-upload-text">
-                  Click or drag file to this area to upload
+                  点击或拖拽文件到此区域进行上传
                 </p>
                 <p className="ant-upload-hint">
                   Support for a single or bulk upload.
                 </p>
-              </Upload.Dragger>
-            </Form.Item>
+              </Upload.Dragger>,
+            )} */}
           </Form.Item>
+        </Form.Item>
 
-          <Form.Item
-            wrapperCol={{
-              span: 12,
-              offset: 6,
-            }}
-          >
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-          </Form.Item>
-        </Form>
-      </div>
-    );
-  }
-}
-
-export default Index;
+        <Form.Item
+          wrapperCol={{
+            span: 12,
+            offset: 6,
+          }}
+        >
+          <Button type="primary" htmlType="submit">
+            提交
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
+  );
+};
+export default connect(({ home }) => ({
+  home,
+}))(Index);
